@@ -4,6 +4,7 @@ import { OSM } from 'ol/source';
 import { Map, View, Overlay } from 'ol';
 import { PopupComponent } from '../popup/popup.component';
 import { Coordinate } from 'ol/coordinate';
+import { SimpleChartComponent } from '../simple-chart/simple-chart.component';
 
 
 @Component({
@@ -45,7 +46,8 @@ export class MapComponent implements OnInit, AfterViewInit {
 
     map.on('singleclick', (evt) => {
       const coordinates = evt.coordinate;
-      this.createPopup(PopupComponent, {content: `${coordinates}`}, coordinates);
+      // this.createPopup(PopupComponent, {content: `${coordinates}`}, coordinates);
+      this.createPopup(SimpleChartComponent, {data: Array(6).fill(1).map(i => Math.random() * 10)}, coordinates);
     });
 
     this.olMap = map;
