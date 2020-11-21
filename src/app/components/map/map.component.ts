@@ -45,16 +45,18 @@ export class MapComponent implements OnInit, AfterViewInit {
 
     map.on('singleclick', (evt) => {
       const coordinates = evt.coordinate;
-      this.createPopup(`${coordinates}`, coordinates);
+      this.createPopup(PopupComponent, {content: `${coordinates}`}, coordinates);
     });
 
     this.olMap = map;
   }
 
-  private createPopup(contentString: string, coordinates: Coordinate) {
-    const popupFactory: ComponentFactory<PopupComponent> = this.cfr.resolveComponentFactory(PopupComponent);
-    const newPopup: ComponentRef<PopupComponent> = this.popupContainer.createComponent(popupFactory);
-    newPopup.instance.content = contentString;
+  private createPopup(component: Type<any>, attrs: {[key: string]: any}, coordinates: Coordinate): void {
+    const popupFactory = this.cfr.resolveComponentFactory(component);
+    const newPopup = this.popupContainer.createComponent(popupFactory);
+    for (const key in attrs) {
+      newPopup.instance[key] = attrs[key];
+    }
 
     const popupElement: ElementRef = newPopup.location;
     const overlay = new Overlay({

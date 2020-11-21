@@ -16,6 +16,9 @@ export class PopupComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+
+    // The fact that the background color is dynamically updated proves that
+    // this component is not detached from Angular's update-cycle.
     this.cs.color.subscribe((c) => {
       this.backgroundColor = c;
     });
