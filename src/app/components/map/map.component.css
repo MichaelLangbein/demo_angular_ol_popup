@@ -1,0 +1,10 @@
+.map {
+    width: 600px;
+    height: 400px;
+    background-color: aquamarine;
+}
+
+.popupContainer {
+    width: 600px;
+    background-color: cadetblue;
+}
