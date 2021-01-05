@@ -1,11 +1,14 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, ViewContainerRef, ComponentFactoryResolver, ComponentFactory, ComponentRef, ViewChildren, Type, QueryList, ContentChildren } from '@angular/core';
-import { Tile as TileLayer } from 'ol/layer';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Tile as TileLayer, Layer } from 'ol/layer';
 import { OSM } from 'ol/source';
-import { Map, View, Overlay } from 'ol';
-import { PopupComponent } from '../popup/popup.component';
-import { Coordinate } from 'ol/coordinate';
-import { SimpleChartComponent } from '../simple-chart/simple-chart.component';
-
+import { MapService } from '../../services/map.service';
+import { PopupService } from 'src/app/services/popup.service';
+import { DataService, LayerData } from 'src/app/services/data.service';
+import { Map, View, Overlay, MapBrowserEvent } from 'ol';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import { GeoJSON } from 'ol/format';
+import { FeatureLike } from 'ol/Feature';
 
 @Component({
   selector: 'app-map',
@@ -15,26 +18,30 @@ import { SimpleChartComponent } from '../simple-chart/simple-chart.component';
 export class MapComponent implements OnInit, AfterViewInit {
 
   @ViewChild('map') map: ElementRef;
-  @ViewChild('popupContainer', { read: ViewContainerRef}) popupContainer: ViewContainerRef;
-  private olMap: Map;
 
   constructor(
-    private cfr: ComponentFactoryResolver
-  ) { }
-
+    private mapService: MapService,
+    private popupService: PopupService,
+    private dataService: DataService
+  ) {}
 
   ngOnInit(): void {
   }
 
   ngAfterViewInit(): void {
+    this.initMap();
+    this.initLayers();
+    this.initPopups();
+  }
 
+  private initMap(): void {
     const bg = new TileLayer({
       source: new OSM()
     });
 
     const view = new View({
       center: [15, 52],
-      zoom: 6,
+      zoom: 4,
       projection: 'EPSG:4326'
     });
 
@@ -44,28 +51,48 @@ export class MapComponent implements OnInit, AfterViewInit {
       view: view
     });
 
-    map.on('singleclick', (evt) => {
-      const coordinates = evt.coordinate;
-      // this.createPopup(PopupComponent, {content: `${coordinates}`}, coordinates);
-      this.createPopup(SimpleChartComponent, {data: Array(6).fill(1).map(i => Math.random() * 10)}, coordinates);
-    });
-
-    this.olMap = map;
+    this.mapService.setMap(map);
   }
 
-  private createPopup(component: Type<any>, attrs: {[key: string]: any}, coordinates: Coordinate): void {
-    const popupFactory = this.cfr.resolveComponentFactory(component);
-    const newPopup = this.popupContainer.createComponent(popupFactory);
-    for (const key in attrs) {
-      newPopup.instance[key] = attrs[key];
-    }
+  private initLayers(): void {
+    this.dataService.getLayers().subscribe((layers: LayerData[]) => {
+      for (const layer of layers) {
 
-    const popupElement: ElementRef = newPopup.location;
-    const overlay = new Overlay({
-      autoPan: true,
-      element: popupElement.nativeElement
+        const olLayer = new VectorLayer({
+          source: new VectorSource({
+            features: new GeoJSON().readFeatures(layer.features)
+          })
+        });
+        olLayer.set('id',  layer.id);
+
+        this.mapService.getMap().addLayer(olLayer);
+      }
     });
-    overlay.setPosition(coordinates);
-    this.olMap.addOverlay(overlay);
+  }
+
+  private initPopups(): void {
+    this.popupService.setStrategy('single-popup');
+
+    this.mapService.getMap().on('click', (evt: MapBrowserEvent) => {
+      const lnf = this.getLayerAndFeatureForEvent(evt);
+      if (lnf) {
+        this.popupService.onClick(lnf.l.get('id'), lnf.f, evt.coordinate);
+      }
+    });
+    this.mapService.getMap().on('pointermove', (evt: MapBrowserEvent) => {
+      const lnf = this.getLayerAndFeatureForEvent(evt);
+      if (lnf) {
+        this.popupService.onPointerMove(lnf.l.get('id'), lnf.f, evt.coordinate, 500);
+      }
+    });
+  }
+
+  private getLayerAndFeatureForEvent(evt: MapBrowserEvent<UIEvent>): {l: Layer, f: FeatureLike} | null {
+    const pixel = evt.pixel;
+    let output = null;
+    this.mapService.getMap().forEachFeatureAtPixel(pixel, (f: FeatureLike, l: Layer) => {
+      output = { l, f };
+    });
+    return output;
   }
 }

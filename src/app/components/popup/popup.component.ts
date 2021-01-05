@@ -1,27 +1,36 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { ColorService } from 'src/app/services/color.service';
+import { Component, OnInit, Input, Type, ViewChild, ViewContainerRef, ComponentFactoryResolver, AfterViewInit } from '@angular/core';
+import { PopupService } from '../../services/popup.service';
 
 @Component({
-  selector: 'app-popup',
+  selector: 'popups-popup',
   templateUrl: './popup.component.html',
   styleUrls: ['./popup.component.css']
 })
-export class PopupComponent implements OnInit {
+export class PopupComponent implements OnInit, AfterViewInit {
 
-  @Input() content: string;
-  backgroundColor = 'blue';
+  @Input() bodyComponent: Type<any>;
+  @Input() attrs: {[key: string]: any};
+  @Input() id: string;
+  @ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
 
   constructor(
-    private cs: ColorService
+    private cfr: ComponentFactoryResolver,
+    private popupService: PopupService
   ) { }
 
   ngOnInit(): void {
+  }
 
-    // The fact that the background color is dynamically updated proves that
-    // this component is not detached from Angular's update-cycle.
-    this.cs.color.subscribe((c) => {
-      this.backgroundColor = c;
-    });
+  ngAfterViewInit(): void {
+    const factory = this.cfr.resolveComponentFactory(this.bodyComponent);
+    const component = this.container.createComponent(factory);
+    for (const key in this.attrs) {
+      component.instance.key = this.attrs.key;
+    }
+  }
+
+  closerClicked(): void {
+    this.popupService.closePopup(this.id);
   }
 
 }

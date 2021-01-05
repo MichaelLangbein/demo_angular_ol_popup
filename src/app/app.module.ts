@@ -4,21 +4,29 @@ import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { MapComponent } from './components/map/map.component';
 import { PopupComponent } from './components/popup/popup.component';
-import { ColorComponent } from './components/color/color.component';
+import { PopupContainerComponent } from './components/popup-container/popup-container.component';
+import { DataService } from './services/data.service';
+import { PopupService } from './services/popup.service';
 import { SimpleChartComponent } from './components/simple-chart/simple-chart.component';
+import { MapService } from './services/map.service';
+
 
 @NgModule({
   declarations: [
     AppComponent,
+    SimpleChartComponent,
     MapComponent,
     PopupComponent,
-    ColorComponent,
-    SimpleChartComponent
+    PopupContainerComponent,
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
   ],
-  providers: [],
+  providers: [
+    DataService,
+    PopupService,
+    MapService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

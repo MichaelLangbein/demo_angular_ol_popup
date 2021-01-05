@@ -1,6 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input } from '@angular/core';
 import { Chart } from 'chart.js';
-import { ColorService } from 'src/app/services/color.service';
 
 @Component({
   selector: 'app-simple-chart',
@@ -11,16 +10,11 @@ export class SimpleChartComponent implements OnInit, AfterViewInit {
 
   @ViewChild('chartCanvas', { read: ElementRef }) chartCanvas: ElementRef;
   @Input() data: number[];
-  backgroundColor = 'lightgrey';
 
   constructor(
-    private cs: ColorService
   ) { }
 
   ngOnInit(): void {
-    this.cs.color.subscribe((color: string) => {
-      this.backgroundColor = color;
-    });
   }
 
   ngAfterViewInit(): void {

@@ -1,3 +1,5 @@
-<div class="popup" [style.background-color]="backgroundColor">
-    {{ content }}
+<p>popup works!</p>
+<div class="popup">
+    <a href="#" class="popup-closer" (click)="closerClicked()"></a>
+    <ng-container #container></ng-container>
 </div>

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { PopupStrategy, PopupService } from './services/popup.service';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,10 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'olPopups';
+
+  constructor(private popupService: PopupService) {}
+
+  setStrat(strat: PopupStrategy) {
+    this.popupService.setStrategy(strat);
+  }
 }
