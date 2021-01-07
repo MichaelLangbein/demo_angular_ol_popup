@@ -4,9 +4,11 @@ import { SimpleChartComponent } from '../components/simple-chart/simple-chart.co
 import { FeatureLike } from 'ol/Feature';
 import { layer1Data, layer2Data, layer3Data } from './data';
 import { Coordinate } from 'ol/coordinate';
+import { PopupStrategy } from './popup.service';
 
 
 export interface PopupInstructions {
+  strategy: PopupStrategy;
   bodyComponent: Type<any>;
   featureToAttrs: (f: FeatureLike, c: Coordinate) => {[key: string]: any};
 }
@@ -26,6 +28,7 @@ export class DataService {
     id: 'Layer 1',
     features: layer1Data,
     popup: {
+      strategy: 'single-popup',
       bodyComponent: SimpleChartComponent,
       featureToAttrs: (f: FeatureLike, c: Coordinate) => {
         return {
@@ -37,6 +40,7 @@ export class DataService {
     id: 'Layer 2',
     features: layer2Data,
     popup: {
+      strategy: 'follow-cursor',
       bodyComponent: SimpleChartComponent,
       featureToAttrs: (f: FeatureLike, c: Coordinate) => {
         return {
@@ -48,6 +52,7 @@ export class DataService {
     id: 'Layer 3',
     features: layer3Data,
     popup: {
+      strategy: 'one-per-click',
       bodyComponent: SimpleChartComponent,
       featureToAttrs: (f: FeatureLike, c: Coordinate) => {
         return {

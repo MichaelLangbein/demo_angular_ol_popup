@@ -23,6 +23,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
   @Input() bodyComponent: Type<any>;
   @Input() attrs: {[key: string]: any};
   @Input() id: string;
+  @Input() layerId: string;
   @ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
 
   constructor(
@@ -42,7 +43,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
   }
 
   closerClicked(): void {
-    this.popupService.closePopup(this.id);
+    this.popupService.closePopup(this.layerId, this.id);
   }
 
 }

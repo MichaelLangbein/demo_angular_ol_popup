@@ -1,7 +1,7 @@
 import { Injectable, Type } from "@angular/core";
 
 import { Observable, BehaviorSubject, from, of, Subscription } from 'rxjs';
-import { debounceTime, tap } from 'rxjs/operators';
+import { debounceTime, tap, map } from 'rxjs/operators';
 
 import { MapBrowserEvent } from 'ol';
 import { FeatureLike } from 'ol/Feature';
@@ -12,12 +12,6 @@ import { DataService, LayerData } from './data.service';
 import { MapService } from './map.service';
 
 
-export interface PopupData {
-  coordinates: Coordinate;
-  attrs: { [key: string]: any; };
-  bodyComponent: Type<any>;
-  id: string;
-}
 
 /**
  * - `single-popup`: There is always only one popup. Upon a left-click, the old popup is removed and a new one is placed over the clicked location.
@@ -26,40 +20,63 @@ export interface PopupData {
  */
 export type PopupStrategy = 'single-popup' | 'one-per-click' | 'follow-cursor';
 
+export interface PopupData {
+  coordinates: Coordinate;
+  attrs: { [key: string]: any; };
+  bodyComponent: Type<any>;
+  id: string;
+}
+
+/**
+ * Each layer has it's own Popup-Strategy
+ */
+export interface LayerPopupData {
+  strategy: PopupStrategy;
+  layerId: string;
+  popupData: PopupData[];
+}
+
+
 /**
  * # PopupService
- *
- * 
  */
 @Injectable()
 export class PopupService {
 
-  private popups$: BehaviorSubject<PopupData[]>;
+  private layerPopupData$: BehaviorSubject<LayerPopupData[]>;
   private actionQueue$: BehaviorSubject<CallableFunction>;
   private actionQueueSub: Subscription;
-  private strategy: PopupStrategy;
 
   constructor(
     private dataService: DataService,
     ) {
-      this.popups$ = new BehaviorSubject<PopupData[]>([]);
+
+      this.layerPopupData$ = new BehaviorSubject<LayerPopupData[]>([]);
+      this.dataService.getLayers().subscribe((layers: LayerData[]) => {
+        const popups: LayerPopupData[] = [];
+        for (const layer of layers) {
+          if (layer.popup) {
+            popups.push({
+              layerId: layer.id,
+              strategy: layer.popup.strategy,
+              popupData: []
+            });
+          }
+        }
+        this.setPopups(popups);
+      });
+
+
       this.actionQueue$ = new BehaviorSubject<CallableFunction>(() => {});
       this.actionQueueSub = this.actionQueue$.pipe(debounceTime(50)).subscribe((action: CallableFunction) => action());
-      this.strategy = 'single-popup';
   }
 
-  /**
-   * Configure how popups should be displayed on a map
-   */
-  setStrategy(strategy: PopupStrategy): void {
-    this.strategy = strategy;
-  }
 
   /**
    * Configure how often a popup should be re-rendered when it follows the cursor
    * (Try to find a compromise between smooth user-experience and app-performance)
    */
-  setPointerMoveDebounceTime(milliseconds: number) {
+  setPointerMoveDebounceTime(milliseconds: number): void {
     this.actionQueueSub.unsubscribe();
     this.actionQueueSub = this.actionQueue$.pipe(debounceTime(milliseconds)).subscribe((action: CallableFunction) => action());
   }
@@ -71,13 +88,14 @@ export class PopupService {
    * *Note*: consider calling `setPointerMoveDebounceTime` to fine-tune the performance of pointer-move-popups.
    */
   onPointerMove(layerId: string, feature: FeatureLike, coords: Coordinate): void {
-    if (this.strategy === 'follow-cursor') {
+    const layerPopupData = this.layerPopupData$.getValue().find(pd => pd.layerId === layerId);
+    if (layerPopupData.strategy === 'follow-cursor') {
       this.actionQueue$.next(() => { // <-- using actionQueue$ for debounce
 
         const layerData = this.dataService.getLayer(layerId);
         if (layerData.popup) {
           const popup = this.createPopupData(layerData, feature, coords);
-          this.setPopups([popup]);
+          this.setLayerPopups(layerId, [popup]);
         }
 
       });
@@ -89,37 +107,56 @@ export class PopupService {
    * Call this method any time a click-event has occurred over a feature.
    */
   onClick(layerId: string, feature: FeatureLike, coords: Coordinate): void {
-      const layerData = this.dataService.getLayer(layerId);
-      if (layerData.popup) {
+      const layerPopupData = this.layerPopupData$.getValue().find(d => d.layerId === layerId);
 
+      if (layerPopupData.strategy === 'follow-cursor'){
+        return;
+      } else {
+        const layerData = this.dataService.getLayer(layerId);
         const popup = this.createPopupData(layerData, feature, coords);
 
-
-        if (this.strategy === 'one-per-click') {
-          this.addPopup(popup);
-        } else if (this.strategy === 'single-popup') {
-          this.setPopups([popup]);
+        if (layerPopupData.strategy === 'one-per-click') {
+          this.addLayerPopup(layerId, popup);
+        }
+        else if (layerPopupData.strategy === 'single-popup') {
+          this.setLayerPopups(layerId, [popup]);
         }
       }
+
   }
 
-  closePopup(id: string): void {
-    const popups = this.popups$.getValue().filter(p => p.id !== id);
-    this.popups$.next(popups);
+  closePopup(layerId: string, popupId: string): void {
+    const layerData = this.layerPopupData$.getValue().find(p => p.layerId === layerId);
+    const newPopupData = layerData.popupData.filter(d => d.id !== popupId);
+    this.setLayerPopups(layerId, newPopupData);
   }
 
-  addPopup(newPopup: PopupData): void {
-      const popups = this.popups$.getValue();
-      popups.push(newPopup);
-      this.popups$.next(popups);
+  addLayerPopup(layerId: string, newPopup: PopupData): void {
+      const popups = this.layerPopupData$.getValue();
+      popups.find(p => p.layerId === layerId).popupData.push(newPopup);
+      this.layerPopupData$.next(popups);
   }
 
-  setPopups(newPopups: PopupData[]): void {
-    this.popups$.next(newPopups);
+  setPopups(newPopups: LayerPopupData[]): void {
+    this.layerPopupData$.next(newPopups);
   }
 
-  getPopups(): Observable<PopupData[]> {
-      return this.popups$;
+  setLayerPopups(layerId: string, popups: PopupData[]): void {
+    const layerPopupData = this.layerPopupData$.getValue();
+    layerPopupData.find(l => l.layerId === layerId).popupData = popups;
+    this.setPopups(layerPopupData);
+  }
+
+  getLayerPopupData(): Observable<LayerPopupData[]> {
+      return this.layerPopupData$;
+  }
+
+  getLayerPopups(layerId: string): Observable<PopupData[]> {
+    return this.layerPopupData$.pipe(
+      map((layerPopupData: LayerPopupData[]) => {
+        return layerPopupData.find(lp => lp.layerId === layerId).popupData;
+      })
+    );
   }
 
   private createPopupData(layerData: LayerData, feature: FeatureLike, coords: Coordinate): PopupData {

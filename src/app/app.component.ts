@@ -11,7 +11,4 @@ export class AppComponent {
 
   constructor(private popupService: PopupService) {}
 
-  setStrat(strat: PopupStrategy) {
-    this.popupService.setStrategy(strat);
-  }
 }

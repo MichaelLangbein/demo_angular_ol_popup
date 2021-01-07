@@ -71,7 +71,6 @@ export class MapComponent implements OnInit, AfterViewInit {
   }
 
   private initPopups(): void {
-    this.popupService.setStrategy('single-popup');
 
     this.mapService.getMap().on('click', (evt: MapBrowserEvent) => {
       const lnf = this.getLayerAndFeatureForEvent(evt);
