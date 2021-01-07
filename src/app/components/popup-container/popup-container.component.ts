@@ -12,6 +12,21 @@ interface PopupBoundData {
   overlay: Overlay;
 }
 
+
+
+
+/**
+ * # PopupContainerComponent
+ *
+ * This container handles the display of popup-data in an ol-map.
+ * It connects the `PopupService` with openlayers `Overlay`s.
+ * It's tasks are:
+ *  - listen to the `PopupService` for changes in the Popup-state
+ *  - For each new popup,
+ *    - create an angular `PopupComponent`
+ *    - connect that component to openlayers using an `Overlay`
+ *  - remove old popups both from openlayers and from angular
+ */
 @Component({
   selector: 'popups-popup-container',
   templateUrl: './popup-container.component.html',
@@ -33,16 +48,19 @@ export class PopupContainerComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     this.popupService.getPopups().subscribe((popups: PopupData[]) => {
 
+      // Checking what data to update and what to remove
       const currentIds = this.currentData.map(d => d.popupData.id);
       const newIds = popups.map(p => p.id);
       const newlyAdded = newIds.filter(id => !currentIds.includes(id));
       const obsolete = currentIds.filter(id => !newIds.includes(id));
 
+      // removing obsolete popups
       for (const oldId of obsolete) {
         const oldData = this.currentData.find(d => d.popupData.id === oldId);
         this.removeOldData(oldData);
       }
 
+      // adding new ones
       for (const newId of newlyAdded) {
         const newPopup = popups.find(p => p.id === newId);
         this.addNewPopup(newPopup);
@@ -78,6 +96,8 @@ export class PopupContainerComponent implements OnInit, AfterViewInit {
       .removeOverlay(oldData.overlay);
     this.container.remove(
       this.container.indexOf(oldData.popup.hostView));
+
+      this.currentData = this.currentData.filter(cd => cd.popupData.id !== oldData.popupData.id);
   }
 
 }

@@ -1,6 +1,18 @@
 import { Component, OnInit, Input, Type, ViewChild, ViewContainerRef, ComponentFactoryResolver, AfterViewInit } from '@angular/core';
 import { PopupService } from '../../services/popup.service';
 
+
+/**
+ * # PopupComponent
+ *
+ * This component is a generic wrapper around a popup-body.
+ *
+ * Tasks:
+ *  - It is used by the `PopupContainerComponent`.
+ *  - Using this component, all UKIS popups look alike.
+ *  - It contains an arbitrary angular-component that it renders as the popup-body.
+ *  - It passes a click on the `X` button on to the `PopupService`
+ */
 @Component({
   selector: 'popups-popup',
   templateUrl: './popup.component.html',
