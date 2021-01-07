@@ -4,6 +4,14 @@ import { PopupComponent } from '../popup/popup.component';
 import { Map, Overlay } from 'ol';
 import { MapService } from 'src/app/services/map.service';
 
+
+
+interface PopupBoundData {
+  popupData: PopupData;
+  popup: ComponentRef<PopupComponent>;
+  overlay: Overlay;
+}
+
 @Component({
   selector: 'popups-popup-container',
   templateUrl: './popup-container.component.html',
@@ -12,6 +20,7 @@ import { MapService } from 'src/app/services/map.service';
 export class PopupContainerComponent implements OnInit, AfterViewInit {
 
   @ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
+  private currentData: PopupBoundData[] = [];
 
   constructor(
     private cfr: ComponentFactoryResolver,
@@ -24,35 +33,51 @@ export class PopupContainerComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     this.popupService.getPopups().subscribe((popups: PopupData[]) => {
 
-      // Todo: differentiate between new popups, updated popups, removed popups
-      // const oldPopups = [];
-      // for (let i = 0; i < this.container.length; i++) {
-      //   const oldPopup: ViewRef = this.container.get(i);
-      //   oldPopup.
-      //   oldPopups.push(this.container.get(i));
-      // }
+      const currentIds = this.currentData.map(d => d.popupData.id);
+      const newIds = popups.map(p => p.id);
+      const newlyAdded = newIds.filter(id => !currentIds.includes(id));
+      const obsolete = currentIds.filter(id => !newIds.includes(id));
 
-      this.container.clear();
-      for (const popup of popups) {
-        this.addPopup(popup);
+      for (const oldId of obsolete) {
+        const oldData = this.currentData.find(d => d.popupData.id === oldId);
+        this.removeOldData(oldData);
       }
+
+      for (const newId of newlyAdded) {
+        const newPopup = popups.find(p => p.id === newId);
+        this.addNewPopup(newPopup);
+      }
+
     });
   }
 
-  addPopup(popupData: PopupData): void {
+  private addNewPopup(newPopup: PopupData): void {
     const factory = this.cfr.resolveComponentFactory(PopupComponent);
     const popup: ComponentRef<PopupComponent> = this.container.createComponent(factory);
-    popup.instance.bodyComponent = popupData.bodyComponent;
-    popup.instance.attrs = popupData.attrs;
-    popup.instance.id = popupData.id;
+    popup.instance.bodyComponent = newPopup.bodyComponent;
+    popup.instance.attrs = newPopup.attrs;
+    popup.instance.id = newPopup.id;
 
     const overlay = new Overlay({
       element: popup.location.nativeElement,
       autoPan: true
     });
-    overlay.setPosition(popupData.coordinates);
+    overlay.setPosition(newPopup.coordinates);
 
     this.mapService.getMap().addOverlay(overlay);
+
+    this.currentData.push({
+      popupData: newPopup,
+      popup: popup,
+      overlay: overlay
+    });
+  }
+
+  private removeOldData(oldData: PopupBoundData): void {
+    this.mapService.getMap()
+      .removeOverlay(oldData.overlay);
+    this.container.remove(
+      this.container.indexOf(oldData.popup.hostView));
   }
 
 }

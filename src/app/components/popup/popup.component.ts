@@ -25,7 +25,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
     const factory = this.cfr.resolveComponentFactory(this.bodyComponent);
     const component = this.container.createComponent(factory);
     for (const key in this.attrs) {
-      component.instance.key = this.attrs.key;
+      component.instance[key] = this.attrs[key];
     }
   }
 

@@ -79,10 +79,12 @@ export class MapComponent implements OnInit, AfterViewInit {
         this.popupService.onClick(lnf.l.get('id'), lnf.f, evt.coordinate);
       }
     });
+
+    this.popupService.setPointerMoveDebounceTime(30);
     this.mapService.getMap().on('pointermove', (evt: MapBrowserEvent) => {
       const lnf = this.getLayerAndFeatureForEvent(evt);
       if (lnf) {
-        this.popupService.onPointerMove(lnf.l.get('id'), lnf.f, evt.coordinate, 500);
+        this.popupService.onPointerMove(lnf.l.get('id'), lnf.f, evt.coordinate);
       }
     });
   }

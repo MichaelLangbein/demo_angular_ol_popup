@@ -4,7 +4,7 @@ export const layer1Data = {
       {
         "type": "Feature",
         "properties": {
-          data: [19, 18, 73, 45, 56]
+          data: [19, 18, 73, 45, 14, 43]
         },
         "geometry": {
           "type": "Polygon",
@@ -37,7 +37,7 @@ export const layer1Data = {
       {
         "type": "Feature",
         "properties": {
-          data: [18, 72, 56, 19, 53]
+          data: [18, 72, 56, 19, 53, 65]
         },
         "geometry": {
           "type": "Polygon",
@@ -77,7 +77,7 @@ export const layer2Data =
       {
         "type": "Feature",
         "properties": {
-          data: [12, 10, 8],
+          data: [12, 10, 8, 56, 17, 71],
         },
         "geometry": {
           "type": "Polygon",
@@ -141,7 +141,7 @@ export const layer3Data = {
     {
       "type": "Feature",
       "properties": {
-        data: [14, 1, 65, 44]
+        data: [14, 1, 65, 44, 7, 63]
       },
       "geometry": {
         "type": "Point",
@@ -154,7 +154,7 @@ export const layer3Data = {
     {
       "type": "Feature",
       "properties": {
-        data: [65, 21, 17, 53]
+        data: [65, 21, 17, 53, 76, 32]
       },
       "geometry": {
         "type": "Point",
@@ -167,7 +167,7 @@ export const layer3Data = {
     {
       "type": "Feature",
       "properties": {
-        data: [17, 48, 14, 69, 52]
+        data: [17, 48, 14, 69, 52, 67, 43]
       },
       "geometry": {
         "type": "Point",

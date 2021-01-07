@@ -1,6 +1,6 @@
 import { Injectable, Type } from "@angular/core";
 
-import { Observable, BehaviorSubject, from, of } from 'rxjs';
+import { Observable, BehaviorSubject, from, of, Subscription } from 'rxjs';
 import { debounceTime, tap } from 'rxjs/operators';
 
 import { MapBrowserEvent } from 'ol';
@@ -26,17 +26,26 @@ export type PopupStrategy = 'single-popup' | 'one-per-click' | 'follow-cursor';
 export class PopupService {
 
   private popups$: BehaviorSubject<PopupData[]>;
+  private actionQueue$: BehaviorSubject<CallableFunction>;
+  private actionQueueSub: Subscription;
   private strategy: PopupStrategy;
 
   constructor(
     private dataService: DataService,
     ) {
       this.popups$ = new BehaviorSubject<PopupData[]>([]);
+      this.actionQueue$ = new BehaviorSubject<CallableFunction>(() => {});
+      this.actionQueueSub = this.actionQueue$.pipe(debounceTime(50)).subscribe((action: CallableFunction) => action());
       this.strategy = 'single-popup';
   }
 
   setStrategy(strategy: PopupStrategy): void {
     this.strategy = strategy;
+  }
+
+  setPointerMoveDebounceTime(milliseconds: number) {
+    this.actionQueueSub.unsubscribe();
+    this.actionQueueSub = this.actionQueue$.pipe(debounceTime(milliseconds)).subscribe((action: CallableFunction) => action());
   }
 
   closePopup(id: string): void {
@@ -58,9 +67,9 @@ export class PopupService {
       return this.popups$;
   }
 
-  onPointerMove(layerId: string, feature: FeatureLike, coords: Coordinate, delay = 0): void {
+  onPointerMove(layerId: string, feature: FeatureLike, coords: Coordinate): void {
     if (this.strategy === 'follow-cursor') {
-      this.doAfterDebounce(delay, () => {
+      this.actionQueue$.next(() => {
 
         const layerData = this.dataService.getLayer(layerId);
         if (layerData.popup) {
@@ -101,11 +110,4 @@ export class PopupService {
     return popup;
   }
 
-  private doAfterDebounce(time: number, action: CallableFunction): void {
-    of(1).pipe(
-      debounceTime(time),
-    ).subscribe(() => {
-      action();
-    });
-  }
 }
