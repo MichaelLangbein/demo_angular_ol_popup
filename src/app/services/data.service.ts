@@ -5,6 +5,7 @@ import { FeatureLike } from 'ol/Feature';
 import { layer1Data, layer2Data, layer3Data } from './data';
 import { Coordinate } from 'ol/coordinate';
 import { PopupStrategy } from './popup.service';
+import { SimplePopupComponent } from '../components/simple-popup/simple-popup.component';
 
 
 export interface PopupInstructions {
@@ -29,7 +30,7 @@ export class DataService {
     features: layer1Data,
     popup: {
       strategy: 'single-popup',
-      bodyComponent: SimpleChartComponent,
+      bodyComponent: SimplePopupComponent,
       featureToAttrs: (f: FeatureLike, c: Coordinate) => {
         return {
           data: f.getProperties()['data']
@@ -41,7 +42,7 @@ export class DataService {
     features: layer2Data,
     popup: {
       strategy: 'follow-cursor',
-      bodyComponent: SimpleChartComponent,
+      bodyComponent: SimplePopupComponent,
       featureToAttrs: (f: FeatureLike, c: Coordinate) => {
         return {
           data: f.getProperties()['data']
@@ -53,7 +54,7 @@ export class DataService {
     features: layer3Data,
     popup: {
       strategy: 'one-per-click',
-      bodyComponent: SimpleChartComponent,
+      bodyComponent: SimplePopupComponent,
       featureToAttrs: (f: FeatureLike, c: Coordinate) => {
         return {
           data: f.getProperties()['data']

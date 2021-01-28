@@ -9,6 +9,7 @@ import { DataService } from './services/data.service';
 import { PopupService } from './services/popup.service';
 import { SimpleChartComponent } from './components/simple-chart/simple-chart.component';
 import { MapService } from './services/map.service';
+import { SimplePopupComponent } from './components/simple-popup/simple-popup.component';
 
 
 @NgModule({
@@ -18,6 +19,7 @@ import { MapService } from './services/map.service';
     MapComponent,
     PopupComponent,
     PopupContainerComponent,
+    SimplePopupComponent,
   ],
   imports: [
     BrowserModule,

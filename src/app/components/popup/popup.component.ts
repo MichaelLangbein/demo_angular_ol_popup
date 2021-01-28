@@ -24,7 +24,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
   @Input() attrs: {[key: string]: any};
   @Input() id: string;
   @Input() layerId: string;
-  @ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
+  @ViewChild('container', {read: ViewContainerRef, static: true}) container: ViewContainerRef;
 
   constructor(
     private cfr: ComponentFactoryResolver,
@@ -32,14 +32,14 @@ export class PopupComponent implements OnInit, AfterViewInit {
   ) { }
 
   ngOnInit(): void {
-  }
-
-  ngAfterViewInit(): void {
     const factory = this.cfr.resolveComponentFactory(this.bodyComponent);
     const component = this.container.createComponent(factory);
     for (const key in this.attrs) {
       component.instance[key] = this.attrs[key];
     }
+  }
+
+  ngAfterViewInit(): void {
   }
 
   closerClicked(): void {

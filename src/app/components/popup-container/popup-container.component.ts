@@ -49,7 +49,6 @@ export class PopupContainerComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.popupService.getLayerPopupData().subscribe((layerPopupData: LayerPopupData[]) => {
-console.log(layerPopupData)
       for (const layerData of layerPopupData) {
 
         // Checking what data to update and what to remove
@@ -70,8 +69,6 @@ console.log(layerPopupData)
           this.addNewPopup(layerData.layerId, newPopup);
         }
       }
-
-
     });
   }
 
